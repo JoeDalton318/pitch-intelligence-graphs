@@ -1,0 +1,1 @@
+# Script d'appel local à l'API Qwen
