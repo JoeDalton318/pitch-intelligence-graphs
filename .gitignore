@@ -1,0 +1,92 @@
+# ==========================================
+# Python - Compilation & Environnements virtuels
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environnements virtuels locaux
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ==========================================
+# IDE - Éditeurs de code
+# ==========================================
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains (PyCharm, IntelliJ, etc.)
+.idea/
+
+# Systèmes d'exploitation
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Science des données & Notebooks
+# ==========================================
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+*.duckdb
+*.db
+*.parquet
+*.csv
+*.json
+# Ne pas ignorer les fichiers de configuration de la base de données s'ils servent de templates
+!database/**/*.json
+!database/**/*.sql
+!database/**/*.cypher
+
+# ==========================================
+# Docker & Persistance Locale
+# ==========================================
+# Ignorer les répertoires de données locales si montés hors volumes nommés
+docker/data/
+neo4j_data/
+mongo_data/
+pg_data/
+minio_data/
+ollama_data/
+
+# Fichiers d'environnement contenant des secrets (conserver les .env.example)
+*.env
+!config/*.env.example
+# Si vous souhaitez suivre les fichiers env non sensibles du socle, décommentez la ligne suivante :
+# !config/airflow.env
+
+# ==========================================
+# Apache Airflow (Local / Logs)
+# ==========================================
+standalone_admin_password.txt
+airflow-webserver.pid
+*.log
+logs/
