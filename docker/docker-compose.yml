@@ -46,7 +46,7 @@ services:
       MINIO_SECRET_KEY: minio12345
     ports: [ "8080:8080" ]
     volumes:
-      - "./dags:/opt/airflow/dags"
+      - "../dags:/opt/airflow/dags"
       - "../src:/opt/airflow/src_project/src"
     command: standalone
 
