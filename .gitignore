@@ -76,6 +76,8 @@ mongo_data/
 pg_data/
 minio_data/
 ollama_data/
+# Données brutes téléchargées (StatsBomb, Kaggle, etc.)
+data/
 
 # Fichiers d'environnement contenant des secrets (conserver les .env.example)
 *.env

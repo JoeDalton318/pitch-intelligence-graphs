@@ -1,1 +1,6 @@
-# Dépendances Python (neo4j, pymongo, duckdb, psycopg2...)
+duckdb
+pandas
+pyarrow
+minio
+psycopg2-binary
+neo4j
