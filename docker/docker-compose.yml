@@ -86,7 +86,10 @@ services:
     #       devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]
 
   neo4j:
-    image: neo4j:5-community
+    # Version epinglee (pas de tag flottant "5-community") : evite qu'un patch
+    # Neo4j plus recent que le dernier build GDS publie casse le chargement du
+    # plugin (cf. https://graphdatascience.ninja/versions.json).
+    image: neo4j:5.26.27-community
     profiles: [ "graph" ]
     environment:
       NEO4J_AUTH: neo4j/neo4j12345

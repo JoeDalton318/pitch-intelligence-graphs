@@ -24,8 +24,8 @@ from src.processing.aggregate_networks import (
 
 
 BRONZE_BUCKET = "bronze"
-BRONZE_KEY = "events/3869685.json"
-MATCH_ID = 3869685
+BRONZE_KEY = "statsbomb/events/match_id=3857286.json"
+MATCH_ID = 3857286
 
 SILVER_CSV_DEST = "s3://silver/passes_agg.csv"
 

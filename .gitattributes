@@ -1,0 +1,2 @@
+# Force LF pour les scripts shell (evite les crashes Docker sur Windows)
+*.sh text eol=lf
