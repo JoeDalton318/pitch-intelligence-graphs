@@ -73,13 +73,15 @@ services:
     command: standalone
 
   superset:
-    image: apache/superset:latest
-    profiles: [ "bi" ]
-    environment:
-      SUPERSET_SECRET_KEY: change_me_please
-    ports: [ "8088:8088" ]
-    volumes: [ "superset_home:/app/superset_home" ]
-
+      build:
+        context: ..
+        dockerfile: docker/superset/Dockerfile
+      image: pitch-intelligent-graph-superset:local
+      profiles: [ "bi" ]
+      environment:
+        SUPERSET_SECRET_KEY: change_me_please
+      ports: [ "8088:8088" ]
+      volumes: [ "superset_home:/app/superset_home" ]
   ollama:
     image: ollama/ollama:latest
     profiles: [ "ai" ]
