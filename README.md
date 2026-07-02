@@ -67,40 +67,35 @@ commande de l'etape 1.
 
 ---
 
-## 🧑‍💻 Section Membre B : Graph Data Engineering (MongoDB & Neo4j)
+## 🧑‍💻 Section Membre B : Gills Daryl KETCHA (Graph Data Engineer)
 
-Cette section documente le travail de la partie "Membre B", centré sur le stockage documentaire des métadonnées et la modélisation en graphe des réseaux de passes.
+Cette section documente le travail réalisé par **Gills Daryl KETCHA (Membre B)**, centré sur le stockage documentaire des métadonnées et la modélisation en graphe des réseaux de passes.
 
-### 1. Ingestion Documentaire (MongoDB)
-Les métadonnées globales des matchs (date, compétition, équipes, managers) sont extraites de la couche Bronze et stockées dans une base de données NoSQL orientée document (MongoDB).
-- **Script d'ingestion** : `src/storage/mongo_writer.py`
-- **Exécution** : 
+### 1. Architecture & Choix Techniques
+- **MongoDB (Ingestion Documentaire)** : Les métadonnées globales des matchs (date, compétition, équipes) sont extraites de la couche Bronze. Pour garantir l'idempotence (éviter les doublons de matchs si le pipeline est relancé), j'ai utilisé la commande `UpdateOne` avec `upsert=True` basée sur le `match_id`. Des index de performance (`database/mongo/indexes.js`) ont été mis en place pour accélérer les futures requêtes.
+- **Neo4j (Modélisation Graphe)** : La couche Silver est modélisée en réseau de passes avec la structure `(Joueur)-[PASSE]->(Joueur)`. L'arête `PASSE` est pondérée par le volume d'échanges (`nb`).
+- **Image Docker Neo4j** : J'ai fixé la version `neo4j:5.21.0-community` avec la variable d'environnement `NEO4J_PLUGINS=["graph-data-science"]` pour garantir la compatibilité et le support natif et stable des algorithmes GDS.
+
+### 2. Guide de démarrage rapide
+
+- **Ingérer les métadonnées dans MongoDB** :
   ```bash
   python src/storage/mongo_writer.py
   ```
-*(Note : Le script gère les doublons grâce à un système d'Upsert basé sur le `match_id` et s'appuie sur des index optimisés créés via `database/mongo/indexes.js`)*.
-
-### 2. Modélisation du Graphe (Neo4j)
-La couche Silver, contenant les données de passes agrégées, est modélisée sous forme de graphe :
-- **Nœuds (`Joueur`)** : Représentent les joueurs sur le terrain.
-- **Relations (`PASSE`)** : Lient un passeur à un receveur. Elles sont pondérées par la propriété `nb` (volume de passes) et contextualisées par le `match_id`.
-- **Scripts d'importation** :
-  1. `database/neo4j/schema_constraints.cypher` : Garantit l'unicité des nœuds.
-  2. `database/neo4j/load_nodes.cypher` : Insère les joueurs.
-  3. `database/neo4j/load_edges.cypher` : Crée les arêtes pondérées.
-
-### 3. Analytique Avancée & Graph Data Science (GDS)
-Une fois le graphe modélisé, nous utilisons la librairie Neo4j GDS pour extraire la véritable valeur tactique métier.
-
-- **PageRank** (`pagerank_score`) : 
-  *Signification* : Identifie les véritables "plaques tournantes" (Hubs) de l'équipe. Un joueur a un score élevé s'il reçoit beaucoup de passes, particulièrement de la part d'autres joueurs eux-mêmes très influents dans la construction du jeu.
-  
-- **Betweenness Centrality / Intermédiarité** (`betweenness_score`) : 
-  *Signification* : Détecte les joueurs "ponts". Un joueur a un score élevé s'il se situe très souvent sur le chemin le plus court entre deux autres joueurs. Il s'agit typiquement des profils clés pour la transition entre la défense et l'attaque.
-
-- **Exécution de l'algorithmique** :
-  1. Lancer le script Cypher `database/neo4j/gds_metrics.cypher` dans l'interface Neo4j pour calculer et inscrire les scores.
-  2. Lancer l'extraction via Python pour afficher le Top 5 : 
+- **Charger le graphe (Neo4j)** :
+  1. Copier et exécuter `database/neo4j/schema_constraints.cypher` pour l'unicité des noeuds.
+  2. Exécuter `database/neo4j/load_nodes.cypher` (Joueurs).
+  3. Exécuter `database/neo4j/load_edges.cypher` (Arêtes de passes pondérées).
+- **Calculer et afficher les métriques** :
+  1. Calculer les scores en mémoire avec : `database/neo4j/gds_metrics.cypher`
+  2. Afficher le Top 5 tactique avec Python :
      ```bash
      python src/storage/neo4j_loader.py
      ```
+
+### 3. Explication Mathématique & Métier des Algorithmes GDS
+
+- **PageRank** : Identifie les "plaques tournantes" (Hubs). Un joueur obtient un score de PageRank élevé s'il reçoit beaucoup de passes de la part d'autres joueurs qui sont eux-mêmes très influents. 
+**Métier** : Permet de trouver le vrai meneur/constructeur du jeu.
+- **Betweenness Centrality (Intermédiarité)** : Détecte les joueurs "ponts". Il calcule à quelle fréquence un joueur se trouve sur le chemin de passes le plus court entre deux autres joueurs. 
+**Métier** : Permet d'identifier le joueur indispensable pour la transition défense-attaque (souvent un milieu récupérateur/relai).
