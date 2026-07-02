@@ -1,5 +1,6 @@
-# docker-compose.yml — Projet 6 (Graphe & réseaux de passes) — autoportant
-# Fichier central d'orchestration de tous les services
+# docker-compose.yml - Projet 6 (Graphe & reseaux de passes)
+# Depuis la racine du projet :
+# docker compose -f docker/docker-compose.yml up -d minio minio-init postgres airflow
 services:
   minio:
     image: minio/minio:latest
@@ -13,7 +14,10 @@ services:
     image: minio/mc:latest
     depends_on: [ minio ]
     entrypoint: >
-      /bin/sh -c " mc alias set local http://minio:9000 minio minio12345; mc mb -p local/bronze local/silver local/gold; exit 0;"
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minio minio12345; do sleep 2; done;
+      mc mb -p local/bronze local/silver local/gold;
+      exit 0;"
   postgres:
     image: postgres:16
     environment:
@@ -23,23 +27,45 @@ services:
     ports: [ "5432:5432" ]
     volumes: [ "pg_data:/var/lib/postgresql/data" ]
   airflow:
-    image: apache/airflow:2.10.4
-    depends_on: [ postgres ]
+    build:
+      context: ..
+      dockerfile: docker/airflow/Dockerfile
+    image: pitch-intelligent-graph-airflow:local
+    depends_on:
+      postgres:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://app:app12345@postgres/gold
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      PYTHONPATH: /opt/airflow/src:/opt/airflow
+      MINIO_ENDPOINT_URL: http://minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio12345
+      BRONZE_BUCKET: bronze
+      STATSBOMB_BASE_URL: https://raw.githubusercontent.com/statsbomb/open-data/master/data
+      STATSBOMB_COMPETITION_ID: "43"
+      STATSBOMB_SEASON_ID: "106"
+      STATSBOMB_MATCH_LIMIT: "1"
     ports: [ "8080:8080" ]
-    volumes: [ "./dags:/opt/airflow/dags" ]
+    volumes:
+      - ../dags:/opt/airflow/dags
+      - ../src:/opt/airflow/src
+      - ../config:/opt/airflow/config
     command: standalone
   superset:
     image: apache/superset:latest
+    profiles: [ "bi" ]
     environment:
       SUPERSET_SECRET_KEY: change_me_please
     ports: [ "8088:8088" ]
     volumes: [ "superset_home:/app/superset_home" ]
   ollama:
     image: ollama/ollama:latest
+    profiles: [ "ai" ]
     ports: [ "11434:11434" ]
     volumes: [ "ollama_data:/root/.ollama" ]
     # GPU optionnel : decommenter si carte NVIDIA disponible
@@ -49,6 +75,7 @@ services:
     #       devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]
   neo4j:
     image: neo4j:5-community
+    profiles: [ "graph" ]
     environment:
       NEO4J_AUTH: neo4j/neo4j12345
       NEO4J_PLUGINS: '["graph-data-science"]'
@@ -56,6 +83,7 @@ services:
     volumes: [ "neo4j_data:/data" ]
   mongo:
     image: mongo:7
+    profiles: [ "metadata" ]
     environment:
       MONGO_INITDB_ROOT_USERNAME: app
       MONGO_INITDB_ROOT_PASSWORD: app12345
