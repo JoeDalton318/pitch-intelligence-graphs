@@ -6,7 +6,7 @@ from pymongo.errors import ConnectionFailure
 # Configuration basique du logger pour un suivi clair (bonne pratique)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def ingest_match_metadata(json_filepath: str, db_uri: str = "mongodb://localhost:27017/", db_name: str = "pitch_intelligence", collection_name: str = "match_metadata"):
+def ingest_match_metadata(json_filepath: str, db_uri: str = "mongodb://app:app12345@localhost:27017/?authSource=admin", db_name: str = "pitch_intelligence", collection_name: str = "match_metadata"):
     """
     Lit un fichier JSON local contenant les métadonnées d'un ou plusieurs matchs 
     (ex: StatsBomb open data) et les insère ou met à jour dans MongoDB.
@@ -75,6 +75,6 @@ def ingest_match_metadata(json_filepath: str, db_uri: str = "mongodb://localhost
             logging.info("Connexion MongoDB fermée.")
 
 if __name__ == "__main__":
-    # Chemin d'exemple (simule l'accès aux données du datalake par le Membre A)
-    SAMPLE_JSON = "data/bronze/sample_match.json"
+    # Chemin vers les vraies données StatsBomb
+    SAMPLE_JSON = "data/bronze/statsbomb_wc2022_matches.json"
     ingest_match_metadata(SAMPLE_JSON)
