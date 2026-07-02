@@ -5,7 +5,6 @@ from typing import Any
 
 import requests
 
-
 DEFAULT_BASE_URL = "https://raw.githubusercontent.com/statsbomb/open-data/master/data"
 
 
