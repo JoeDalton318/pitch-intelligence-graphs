@@ -17,8 +17,8 @@ from datetime import datetime
 from airflow.decorators import dag, task
 
 # Imports depuis le code du projet (monté dans /opt/airflow/src_project/src)
-from src.processing.clean_passes import extract_clean_passes
-from src.processing.aggregate_networks import (
+from processing.clean_passes import extract_clean_passes
+from processing.aggregate_networks import (
     aggregate_pass_network,
     write_silver_csv,
 )
