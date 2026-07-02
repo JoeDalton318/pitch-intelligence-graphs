@@ -7,9 +7,16 @@ on:
 jobs:
   lint-and-format:
     runs-on: ubuntu-latest
+    # Permission nécessaire pour permettre à l'action de pousser le commit sur la branche
+    permissions:
+      contents: write
+      
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
+        with:
+          # Indispensable pour un push : on checkout la branche de la PR, et non le commit de fusion éphémère
+          ref: ${{ github.head_ref }}
         
       - name: Configuration de Python
         uses: actions/setup-python@v5
@@ -22,12 +29,23 @@ jobs:
           pip install black flake8
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           
-      - name: Vérification du formatage avec Black
+      - name: Formatage avec Black
         run: |
-          # Utilise le mode --check pour remonter une erreur si un fichier n'est pas formaté
-          black --check src/
+          # On formate directement tous les fichiers (sans le flag --check)
+          black src/
+          
+      - name: Auto-commit du formatage Black
+        run: |
+          # Paramétrage de l'identité du bot Github Actions
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Vérifie s'il y a des modifications à commiter. Si oui, on commit et on push.
+          # Le [skip ci] évite de redéclencher le workflow en boucle après ce push.
+          git diff --quiet || (git add src/ && git commit -m "style(auto): formatage automatique avec Black [skip ci]" && git push)
           
       - name: Analyse statique avec Flake8
         run: |
           # Tolérance sur la longueur des lignes à 120 caractères (standard avec Black)
           flake8 src/ --count --max-complexity=10 --max-line-length=120 --statistics
+
