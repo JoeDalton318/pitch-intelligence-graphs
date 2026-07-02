@@ -1,6 +1,26 @@
-duckdb
-pandas
-pyarrow
-minio
-psycopg2-binary
-neo4j
+# ==========================================
+# Base de données & Stockage (Membre B & A)
+# ==========================================
+neo4j==5.21.0               # Driver officiel Neo4j
+graphdatascience==1.10.0    # Client Python natif pour Neo4j GDS (simplifie grandement les appels)
+pymongo==4.7.0              # Driver officiel MongoDB
+psycopg2-binary==2.9.9      # Driver PostgreSQL pour l'écriture de la couche Gold
+minio==7.2.7                # Client Python officiel pour manipuler le datalake MinIO
+
+# ==========================================
+# Traitement de données (Membre C)
+# ==========================================
+pandas==2.2.2               # Manipulation de données standard
+duckdb==1.0.0               # Moteur analytique embarqué pour la couche Silver
+polars==0.20.31             # Alternative à Pandas économe en RAM
+
+# ==========================================
+# Intelligence Artificielle (Transverse)
+# ==========================================
+openai==1.35.3              # Requis pour requêter l'API locale d'Ollama (Qwen) de manière standardisée
+
+# ==========================================
+# Utilitaires
+# ==========================================
+python-dotenv==1.0.1        # Permet de charger facilement vos identifiants depuis le dossier config/
+requests==2.32.3            # Utile si vous décidez d'ingérer de la donnée via des API HTTP
