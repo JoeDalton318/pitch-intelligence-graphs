@@ -75,10 +75,53 @@ def load_graph_to_neo4j(uri, user, password, csv_path):
                     records=records,
                 )
 
+                # 4. Exécution automatique des algorithmes GDS (Graph Data Science)
+                logging.info("4. Exécution des algorithmes GDS (PageRank et Betweenness)...")
+                try:
+                    # On supprime la projection si elle existe déjà (relance du DAG)
+                    session.run("CALL gds.graph.drop('reseau_passes', false) YIELD graphName;")
+                    
+                    # Projection en mémoire
+                    session.run("""
+                    CALL gds.graph.project(
+                        'reseau_passes',
+                        'Joueur',
+                        {PASSE: {orientation: 'NATURAL', properties: 'nb'}}
+                    );
+                    """)
+                    
+                    # PageRank
+                    session.run("""
+                    CALL gds.pageRank.write(
+                        'reseau_passes',
+                        {
+                            maxIterations: 20,
+                            dampingFactor: 0.85,
+                            relationshipWeightProperty: 'nb',
+                            writeProperty: 'pagerank_score'
+                        }
+                    );
+                    """)
+                    
+                    # Betweenness
+                    session.run("""
+                    CALL gds.betweenness.write(
+                        'reseau_passes',
+                        {writeProperty: 'betweenness_score'}
+                    );
+                    """)
+                    
+                    # Nettoyage de la mémoire
+                    session.run("CALL gds.graph.drop('reseau_passes');")
+                    logging.info("-> Algorithmes GDS terminés et scores sauvegardés dans Neo4j.")
+                except Exception as e:
+                    logging.error(f"Erreur lors de l'exécution de GDS : {e}")
+
             logging.info("✅ Étape C1.5 (Graphe Neo4j) terminée avec succès !")
 
     except Exception as e:
         logging.error(f"Erreur lors de l'interaction avec Neo4j : {e}")
+
 
 
 def get_top_players_by_pagerank(uri, user, password, limit=5):
