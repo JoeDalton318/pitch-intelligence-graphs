@@ -1,16 +1,22 @@
 import duckdb
 import psycopg2
 from psycopg2.extras import execute_values
+import os
 
 def load_gold():
     print("1. Lecture du fichier Parquet (Couche Silver) via DuckDB...")
+    
+    # On utilise des variables d'environnement pour s'adapter (Local ou Docker)
+    minio_endpoint = os.getenv("MINIO_ENDPOINT", "localhost:9000")
+    pg_host = os.getenv("PG_HOST", "127.0.0.1")
+
     # DuckDB va nous servir uniquement de lecteur S3 ultra-rapide
     con = duckdb.connect(database=':memory:')
     con.execute("INSTALL httpfs; LOAD httpfs;")
-    con.execute("""
+    con.execute(f"""
         CREATE SECRET minio_secret (
             TYPE S3, KEY_ID 'minio', SECRET 'minio12345',
-            ENDPOINT 'localhost:9000', URL_STYLE 'path', USE_SSL false
+            ENDPOINT '{minio_endpoint}', URL_STYLE 'path', USE_SSL false
         );
     """)
 
@@ -18,10 +24,10 @@ def load_gold():
     records = con.execute("SELECT * FROM read_parquet('s3://silver/passes_agg.parquet')").fetchall()
     print(f"-> {len(records)} lignes lues depuis MinIO.")
     
-    print("2. Connexion à la base de données PostgreSQL (Couche Gold)...")
+    print(f"2. Connexion à la base de données PostgreSQL (Couche Gold) sur {pg_host}...")
     # Connexion à l'instance Postgres qui tourne dans Docker
     pg_conn = psycopg2.connect(
-        host="localhost",
+        host=pg_host,
         port=5432,
         user="app",
         password="app12345",
