@@ -42,8 +42,8 @@ echo "✅ MinIO joignable (HTTP $STATUS)"
 
 # Déclencher le job Databricks avec la nouvelle URL
 echo "🔄 Lancement du job Databricks ($JOB_ID)..."
-databricks jobs run-now "$JOB_ID" \
-  --json "{\"notebook_params\": {\"ngrok_url\": \"$NGROK_URL\"}}"
+databricks jobs run-now \
+  --json "{\"job_id\": $JOB_ID, \"notebook_params\": {\"ngrok_url\": \"$NGROK_URL\"}}"
 
 echo "✅ Job lancé ! Consultez la progression sur :"
 echo "   https://dbc-6090890b-e77d.cloud.databricks.com/?o=7474646401140418#job/$JOB_ID"
