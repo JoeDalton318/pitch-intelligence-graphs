@@ -12,7 +12,12 @@ def load_gold():
     pg_host = os.getenv("PG_HOST", "127.0.0.1")
 
     # DuckDB va nous servir uniquement de lecteur S3 ultra-rapide
+<<<<<<< Updated upstream
     con = duckdb.connect(database=":memory:")
+=======
+    con = duckdb.connect(database=':memory:')
+    con.execute("SET home_directory='/tmp';")
+>>>>>>> Stashed changes
     con.execute("INSTALL httpfs; LOAD httpfs;")
     con.execute(f"""
         CREATE SECRET minio_secret (
@@ -65,11 +70,16 @@ def load_gold():
 
     cursor.close()
     pg_conn.close()
+<<<<<<< Updated upstream
 
     print(
         "✅ Étape C2 (Couche Gold) terminée avec succès ! Les données sont dans PostgreSQL, prêtes pour Superset."
     )
 
+=======
+    
+    print("Etape C2 (Couche Gold) terminee avec succes ! Les donnees sont dans PostgreSQL, pretes pour Superset.")
+>>>>>>> Stashed changes
 
 if __name__ == "__main__":
     load_gold()

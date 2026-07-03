@@ -24,25 +24,38 @@ with DAG(
 ) as dag:
 
     # Task 1 : Ingestion Bronze (Membre A)
-    # Collecte les données de l'API StatsBomb vers le datalake MinIO
     ingest_bronze = BashOperator(
         task_id='ingestion_bronze_task',
         bash_command='python /opt/airflow/src/ingestion/fetch_public_data.py',
     )
 
-    # Task 2 : Traitement Silver (Membre C)
-    # Nettoyage et agrégation des passes (DuckDB/Polars)
+    # Task 2 : Ingestion Métadonnées MongoDB (Membre B)
+    load_mongo = BashOperator(
+        task_id='chargement_mongo_task',
+        env={"MONGO_URI": "mongodb://app:app12345@mongo:27017/?authSource=admin"},
+        bash_command='python /opt/airflow/src/storage/mongo_writer.py',
+    )
+
+    # Task 3 : Traitement Silver (Membre C)
     process_silver = BashOperator(
         task_id='traitement_silver_task',
+        env={"MINIO_ENDPOINT": "minio:9000"},
         bash_command='python /opt/airflow/src/processing/clean_passes.py',
     )
 
-    # Task 3 : Chargement Gold (Membre C)
-    # Intégration des données analytiques vers PostgreSQL pour la BI
+    # Task 4 : Chargement Graphe Neo4j (Membre B)
+    load_neo4j = BashOperator(
+        task_id='chargement_neo4j_task',
+        bash_command='python /opt/airflow/src/storage/neo4j_loader.py',
+    )
+
+    # Task 5 : Chargement Gold (Membre C)
     load_gold = BashOperator(
         task_id='chargement_gold_task',
+        env={"MINIO_ENDPOINT": "minio:9000", "PG_HOST": "postgres"},
         bash_command='python /opt/airflow/src/storage/postgres_writer.py',
     )
 
     # Définition stricte de l'ordre d'exécution (dépendances)
-    ingest_bronze >> process_silver >> load_gold
+    ingest_bronze >> [load_mongo, process_silver]
+    process_silver >> [load_neo4j, load_gold]

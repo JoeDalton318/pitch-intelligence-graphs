@@ -30,7 +30,7 @@ def get_top_players_by_pagerank(uri, user, password, limit=5):
             with driver.session() as session:
                 result = session.run(query, limit=limit)
 
-                print(f"\n🏆 --- TOP {limit} PLAQUES TOURNANTES (PageRank) --- 🏆")
+                print(f"\n--- TOP {limit} PLAQUES TOURNANTES (PageRank) ---")
                 for i, record in enumerate(result, 1):
                     joueur = record["joueur"]
                     equipe = record["equipe"]
