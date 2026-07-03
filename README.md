@@ -99,3 +99,22 @@ Cette section documente le travail réalisé par **Gills Daryl KETCHA (Membre B)
 **Métier** : Permet de trouver le vrai meneur/constructeur du jeu.
 - **Betweenness Centrality (Intermédiarité)** : Détecte les joueurs "ponts". Il calcule à quelle fréquence un joueur se trouve sur le chemin de passes le plus court entre deux autres joueurs. 
 **Métier** : Permet d'identifier le joueur indispensable pour la transition défense-attaque (souvent un milieu récupérateur/relai).
+
+---
+
+## Section Membre C : Data Transformation & Restitution BI (DuckDB, PostgreSQL, Superset)
+
+Cette section documente le travail realise par la partie Membre C du projet. L'objectif etait de transformer les donnees brutes (Silver), de les stocker dans un environnement analytique robuste (Gold) et de les restituer.
+
+### Architecture Technique
+1. **Couche Silver (DuckDB)** : Lecture des donnees brutes JSON depuis le bucket Bronze, filtrage des passes et aggregation, sauvegarde au format Parquet dans MinIO.
+2. **Couche Gold (PostgreSQL)** : Upsert massif des donnees agregees via DuckDB et psycopg2 vers une base relationnelle PostgreSQL.
+3. **Restitution (Superset)** : Connexion a Postgres pour la generation de Dashboards de Business Intelligence.
+
+### Guide de configuration BI (Superset)
+Pour configurer et acceder a la restitution visuelle des passes :
+
+1. Acceder a l'interface web Apache Superset a l'adresse : `http://localhost:8088`.
+2. Ajouter PostgreSQL comme source de donnees analytique. Utiliser la chaine de connexion SQLAlchemy suivante :
+   `postgresql+psycopg2://app:app12345@postgres:5432/gold`
+3. Exposer la table `fact_passes` pour construire les graphiques et le tableau de bord final.

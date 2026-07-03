@@ -13,6 +13,7 @@ def load_gold():
 
     # DuckDB va nous servir uniquement de lecteur S3 ultra-rapide
     con = duckdb.connect(database=":memory:")
+    con.execute("SET home_directory='/tmp';")
     con.execute("INSTALL httpfs; LOAD httpfs;")
     con.execute(f"""
         CREATE SECRET minio_secret (
@@ -67,7 +68,7 @@ def load_gold():
     pg_conn.close()
 
     print(
-        "✅ Étape C2 (Couche Gold) terminée avec succès ! Les données sont dans PostgreSQL, prêtes pour Superset."
+        "Etape C2 (Couche Gold) terminee avec succes ! Les donnees sont dans PostgreSQL, pretes pour Superset."
     )
 
 

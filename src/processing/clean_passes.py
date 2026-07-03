@@ -1,17 +1,21 @@
 import duckdb
+import os
 
 
 def process_silver():
     print("Connexion à DuckDB et configuration de MinIO...")
     con = duckdb.connect(database=":memory:")
+    con.execute("SET home_directory='/tmp';")
     con.execute("INSTALL httpfs; LOAD httpfs;")
 
-    con.execute("""
+    minio_endpoint = os.getenv("MINIO_ENDPOINT", "localhost:9000")
+
+    con.execute(f"""
         CREATE SECRET minio_secret (
             TYPE S3,
             KEY_ID 'minio',
             SECRET 'minio12345',
-            ENDPOINT 'localhost:9000',
+            ENDPOINT '{minio_endpoint}',
             URL_STYLE 'path',
             USE_SSL false
         );
@@ -30,7 +34,7 @@ def process_silver():
     WHERE type.name = 'Pass' 
       AND pass.outcome IS NULL
     GROUP BY 
-        match_id, passeur_nom, receveur_nom, equipe
+        1, 2, 3, 4
     """
 
     try:
@@ -51,7 +55,7 @@ def process_silver():
     print("Sauvegarde au format CSV à la racine du projet (pour Neo4j)...")
     con.execute("COPY passes_silver TO 'passes_agg.csv' (HEADER, DELIMITER ',');")
 
-    print("✅ Étape C1 (Couche Silver) terminée avec succès !")
+    print("Etape C1 (Couche Silver) terminee avec succes !")
 
 
 if __name__ == "__main__":

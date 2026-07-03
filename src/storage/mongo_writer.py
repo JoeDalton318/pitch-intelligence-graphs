@@ -9,9 +9,14 @@ logging.basicConfig(
 )
 
 
+import os
+
+
 def ingest_match_metadata(
     json_filepath: str,
-    db_uri: str = "mongodb://app:app12345@localhost:27017/?authSource=admin",
+    db_uri: str = os.getenv(
+        "MONGO_URI", "mongodb://app:app12345@localhost:27017/?authSource=admin"
+    ),
     db_name: str = "pitch_intelligence",
     collection_name: str = "match_metadata",
 ):
@@ -29,9 +34,22 @@ def ingest_match_metadata(
         db = client[db_name]
         collection = db[collection_name]
 
-        # 2. Lecture du fichier JSON local contenant les données brutes
-        with open(json_filepath, "r", encoding="utf-8") as f:
-            matches_data = json.load(f)
+        # 2. Lecture du fichier JSON depuis MinIO (Couche Bronze)
+        import sys, os
+
+        sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+        from dags.utils.s3_client import get_minio_client
+
+        minio_client = get_minio_client()
+        bronze_bucket = os.getenv("BRONZE_BUCKET", "bronze")
+        # On lit le fichier des matchs de la coupe du monde par defaut
+        response = minio_client.get_object(
+            bronze_bucket,
+            "statsbomb/matches/competition_id=43/season_id=106/matches.json",
+        )
+        matches_data = json.loads(response.read().decode("utf-8"))
+        response.close()
+        response.release_conn()
 
         # Uniformisation : on s'assure d'avoir une liste même si on a un seul match
         if isinstance(matches_data, dict):
