@@ -1,26 +1,16 @@
 import duckdb
+import os
 
-<<<<<<< Updated upstream
 
 def process_silver():
     print("Connexion à DuckDB et configuration de MinIO...")
     con = duckdb.connect(database=":memory:")
-    con.execute("INSTALL httpfs; LOAD httpfs;")
-
-    con.execute("""
-=======
-import os
-
-def process_silver():
-    print("Connexion à DuckDB et configuration de MinIO...")
-    con = duckdb.connect(database=':memory:')
     con.execute("SET home_directory='/tmp';")
     con.execute("INSTALL httpfs; LOAD httpfs;")
-    
+
     minio_endpoint = os.getenv("MINIO_ENDPOINT", "localhost:9000")
-    
+
     con.execute(f"""
->>>>>>> Stashed changes
         CREATE SECRET minio_secret (
             TYPE S3,
             KEY_ID 'minio',
@@ -64,13 +54,8 @@ def process_silver():
 
     print("Sauvegarde au format CSV à la racine du projet (pour Neo4j)...")
     con.execute("COPY passes_silver TO 'passes_agg.csv' (HEADER, DELIMITER ',');")
-<<<<<<< Updated upstream
 
-    print("✅ Étape C1 (Couche Silver) terminée avec succès !")
-=======
-    
     print("Etape C1 (Couche Silver) terminee avec succes !")
->>>>>>> Stashed changes
 
 
 if __name__ == "__main__":
