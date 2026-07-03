@@ -3,15 +3,16 @@ import psycopg2
 from psycopg2.extras import execute_values
 import os
 
+
 def load_gold():
     print("1. Lecture du fichier Parquet (Couche Silver) via DuckDB...")
-    
+
     # On utilise des variables d'environnement pour s'adapter (Local ou Docker)
     minio_endpoint = os.getenv("MINIO_ENDPOINT", "localhost:9000")
     pg_host = os.getenv("PG_HOST", "127.0.0.1")
 
     # DuckDB va nous servir uniquement de lecteur S3 ultra-rapide
-    con = duckdb.connect(database=':memory:')
+    con = duckdb.connect(database=":memory:")
     con.execute("INSTALL httpfs; LOAD httpfs;")
     con.execute(f"""
         CREATE SECRET minio_secret (
@@ -21,17 +22,17 @@ def load_gold():
     """)
 
     # fetchall() transforme le résultat directement en liste de tuples natifs Python
-    records = con.execute("SELECT * FROM read_parquet('s3://silver/passes_agg.parquet')").fetchall()
+    records = con.execute(
+        "SELECT * FROM read_parquet('s3://silver/passes_agg.parquet')"
+    ).fetchall()
     print(f"-> {len(records)} lignes lues depuis MinIO.")
-    
-    print(f"2. Connexion à la base de données PostgreSQL (Couche Gold) sur {pg_host}...")
+
+    print(
+        f"2. Connexion à la base de données PostgreSQL (Couche Gold) sur {pg_host}..."
+    )
     # Connexion à l'instance Postgres qui tourne dans Docker
     pg_conn = psycopg2.connect(
-        host=pg_host,
-        port=5432,
-        user="app",
-        password="app12345",
-        dbname="gold"
+        host=pg_host, port=5432, user="app", password="app12345", dbname="gold"
     )
     cursor = pg_conn.cursor()
 
@@ -47,7 +48,7 @@ def load_gold():
             PRIMARY KEY (match_id, passeur_nom, receveur_nom)
         );
     """)
-    
+
     print("4. Upsert (INSERT ON CONFLICT) des données...")
     upsert_query = """
         INSERT INTO fact_passes (match_id, passeur_nom, receveur_nom, equipe, nombre_passes)
@@ -57,15 +58,18 @@ def load_gold():
             equipe = EXCLUDED.equipe,
             nombre_passes = EXCLUDED.nombre_passes;
     """
-    
+
     # execute_values est une fonction optimisée de psycopg2 pour faire des insertions en masse
     execute_values(cursor, upsert_query, records)
     pg_conn.commit()
-    
+
     cursor.close()
     pg_conn.close()
-    
-    print("✅ Étape C2 (Couche Gold) terminée avec succès ! Les données sont dans PostgreSQL, prêtes pour Superset.")
+
+    print(
+        "✅ Étape C2 (Couche Gold) terminée avec succès ! Les données sont dans PostgreSQL, prêtes pour Superset."
+    )
+
 
 if __name__ == "__main__":
     load_gold()
